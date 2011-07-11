@@ -1,0 +1,19 @@
+name: MLManager
+main: me.Sable.MLmanager.MLManager
+version: 0.1.0
+description: >
+             Commands for use with MLManager.
+
+commands:
+  level:
+    description: Returns a player's experience and levels.
+    usage:
+  stats:
+    description: Returns a player's stats.
+    usage:
+  givexp:
+    description: Gives XP to a player.
+    usage:
+  assign:
+    description: Assigns stat points to a stat.
+    usage:
