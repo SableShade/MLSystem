@@ -72,7 +72,6 @@ public class MLManager extends JavaPlugin {
 			playerList.put(onlinePlayers[x],p);
 		}
 		
-		// print out levels for my interest - not needed
 		System.out.println("[MLManager] Enabled.");
 	}
 
@@ -127,6 +126,7 @@ public class MLManager extends JavaPlugin {
 			playerLevelXP.add(xp);
 		}
 		System.out.println("[MLManager] XP amounts calculated and stored.");
+		// print out levels for my interest - not needed
 		System.out.println(playerLevelXP);
 		
 	}
