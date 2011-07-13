@@ -1,10 +1,6 @@
 package me.Sable.MLmanager;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
@@ -17,6 +13,7 @@ import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.config.Configuration;
 
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
@@ -30,6 +27,7 @@ import com.nijikokun.bukkit.Permissions.Permissions;
  */
 public class MLManager extends JavaPlugin {
 
+	public static Configuration config;
 	public HashMap<Player, PlayerAtt> playerList = new HashMap<Player, PlayerAtt>();
 	public ArrayList<Integer> playerLevelXP = new ArrayList<Integer>();
 
@@ -40,6 +38,7 @@ public class MLManager extends JavaPlugin {
 	public final PlayerFunctions playerFunctions = new PlayerFunctions(this);
 	public final DBManager dbManager = new DBManager(this);
 
+	public Integer levels;
 	// DB Stuff.
 	public String database;
 	public String MySqlDir;
@@ -59,12 +58,13 @@ public class MLManager extends JavaPlugin {
 		pm.registerEvent(Event.Type.PLAYER_TELEPORT, playerListener,
 				Priority.High, this);
 
-		loadDBConfig();
-		loadLevels();
+		loadConfig();
+		initLevels();
 		setupPermissions();
 
 		dbManager.prepare();
-		
+
+		// need if plugin is reloaded - there won't be any online players when server is restarting
 		Player[] onlinePlayers = this.getServer().getOnlinePlayers();
 		
 		for(int x=0;x<onlinePlayers.length;x++){
@@ -89,13 +89,34 @@ public class MLManager extends JavaPlugin {
 		System.out.println("[MLManager] Disabled.");
 	}
 
-	public void loadLevels() {
+	public void loadConfig() {
+		config = new Configuration(new File(getDataFolder() , "config.yml"));
+			//Load the config if it's there
+			try {
+				config.load();
+			}
+			catch(Exception ex){
+				// Ignore the errors
+			}
+			
+			//Load our variables from configuration
+			database = config.getString("database", "");
+			MySqlDir = config.getString("MySqlDir", "");
+			MySqlPass = config.getString("MySqlPass", "");
+			MySqlUser = config.getString("MySqlUser", "");
+			levels = config.getInt("Levels", 5);
+			if (database.equals("")) {
+				System.out.println("The database has not been configured in plugins/MLManage/config.yml");
+			}
+
+			//Save the configuration(especially if it wasn't before)
+			config.save();
+
+	}
+
+	public void initLevels() {
 		playerLevelXP.clear();
-		
 		Integer baselevel = 0;
-		
-		int levels = loadLvLConfig();
-		
 		playerLevelXP.add(baselevel);
 		
 		for(int x=0;x<levels;x++){
@@ -105,79 +126,9 @@ public class MLManager extends JavaPlugin {
 			playerLevelXP.add(xp);
 		}
 		System.out.println("[MLManager] XP amounts calculated and stored.");
+		// print out levels for my interest - not needed
+		System.out.println(playerLevelXP);
 		
-	}
-	
-	public int loadLvLConfig() {
-		File config = new File(getDataFolder() + "/LvLConfig.txt");
-
-		int levels = 0;
-
-		try {
-
-			BufferedReader br = new BufferedReader(new FileReader(config));
-			String line = null;
-			while ((line = br.readLine()) != null) {
-				if(line.contains("Levels:")){
-					String l = line;
-					l = l.replace("Levels:", "");
-					l = l.trim();
-					levels = Integer.parseInt(l);
-				}
-			}
-			System.out.println("[MLManager] LvLConfig.txt found and loaded.");
-			br.close();
-
-		} catch (FileNotFoundException ex) {
-			System.out.println("[MLManager] LvLConfig.txt not found.");
-		} catch (IOException ex) {
-			System.out.println("[MLManager] LvLConfig.txt not found.");
-		}
-		return levels;
-	}
-
-	public void loadDBConfig() {
-		File config = new File(getDataFolder() + "/DBConfig.txt");
-
-		database = null;
-		MySqlDir = null;
-		MySqlPass = null;
-		MySqlUser = null;
-
-		try {
-
-			BufferedReader br = new BufferedReader(new FileReader(config));
-			String line = null;
-			while ((line = br.readLine()) != null) {
-				if (line.contains("database:")) {
-					database=line;
-					database = database.replace("database:","");
-					database = database.trim();
-				}
-				else if (line.contains("MySqlDir:")) {
-					MySqlDir=line;
-					MySqlDir = MySqlDir.replace("MySqlDir:","");
-					MySqlDir = MySqlDir.trim();
-				}
-				else if (line.contains("MySqlPass:")) {
-					MySqlPass=line;
-					MySqlPass =MySqlPass.replace("MySqlPass:","");
-					MySqlPass =MySqlPass.trim();
-				}
-				else if (line.contains("MySqlUser:")) {
-					MySqlUser=line;
-					MySqlUser = MySqlUser.replace("MySqlUser:","");
-					MySqlUser = MySqlUser.trim();
-				}
-			}
-			System.out.println("[MLManager] DBConfig.txt found and loaded.");
-			br.close();
-
-		} catch (FileNotFoundException ex) {
-			System.out.println("[MLManager] DBConfig.txt not found.");
-		} catch (IOException ex) {
-			System.out.println("[MLManager] DBConfig.txt not found.");
-		}
 	}
 
 	public void setupPermissions() {
